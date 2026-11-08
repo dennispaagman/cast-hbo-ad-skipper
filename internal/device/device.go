@@ -94,7 +94,7 @@ func deviceAddress(entry castdns.CastEntry) string {
 }
 
 func (d *Device) session(ctx context.Context) error {
-	conn, err := castconn.Dial(ctx, deviceAddress(d.entry), d.conf.RequestTimeout, d.conf.NetworkInterface)
+	conn, err := castconn.Dial(ctx, deviceAddress(d.entry), d.conf.RequestTimeout)
 	if err != nil {
 		return fmt.Errorf("connect: %w", err)
 	}

@@ -92,7 +92,7 @@ func TestConnExchangesMessagesAndAnswersPings(t *testing.T) {
 		}
 	}()
 
-	conn, err := Dial(context.Background(), ln.Addr().String(), 3*time.Second, nil)
+	conn, err := Dial(context.Background(), ln.Addr().String(), 3*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,49 +125,6 @@ func TestConnExchangesMessagesAndAnswersPings(t *testing.T) {
 	}
 }
 
-func TestDialWithNetworkInterface(t *testing.T) {
-	ln := newTLSListener(t)
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		t.Fatal(err)
-	}
-	var loopback *net.Interface
-	for _, iface := range ifaces {
-		if iface.Flags&net.FlagLoopback != 0 {
-			loopback = &iface
-			break
-		}
-	}
-	if loopback == nil {
-		t.Fatal("no loopback interface")
-	}
-	serverDone := make(chan error, 1)
-	go func() {
-		c, err := ln.Accept()
-		if err != nil {
-			serverDone <- err
-			return
-		}
-		defer c.Close()
-		serverDone <- c.(*tls.Conn).Handshake()
-	}()
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-	conn, err := Dial(ctx, ln.Addr().String(), 3*time.Second, loopback)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer conn.Close()
-	select {
-	case err := <-serverDone:
-		if err != nil {
-			t.Fatal(err)
-		}
-	case <-ctx.Done():
-		t.Fatal(ctx.Err())
-	}
-}
-
 func TestConnFailsWhenDeviceGoesSilent(t *testing.T) {
 	ln := newTLSListener(t)
 	go func() {
@@ -180,7 +137,7 @@ func TestConnFailsWhenDeviceGoesSilent(t *testing.T) {
 		_, _ = io.Copy(io.Discard, c)
 	}()
 
-	conn, err := Dial(context.Background(), ln.Addr().String(), 300*time.Millisecond, nil)
+	conn, err := Dial(context.Background(), ln.Addr().String(), 300*time.Millisecond)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -193,44 +150,5 @@ func TestConnFailsWhenDeviceGoesSilent(t *testing.T) {
 		}
 	case <-time.After(3 * time.Second):
 		t.Fatal("silent connection was not detected")
-	}
-}
-
-func TestInterfaceAddress(t *testing.T) {
-	for _, tc := range []struct {
-		name   string
-		addrs  []string
-		remote string
-		want   string
-	}{
-		{"IPv4 subnet", []string{"192.0.2.1/24", "198.51.100.1/24"}, "198.51.100.2", "198.51.100.1:0"},
-		{"IPv4 routed", []string{"192.0.2.1/24"}, "198.51.100.2", "192.0.2.1:0"},
-		{"IPv6", []string{"192.0.2.1/24", "fe80::1/64", "2001:db8::1/64"}, "2001:db8::2", "[2001:db8::1]:0"},
-		{"IPv6 link local", []string{"2001:db8::1/64", "fe80::1/64"}, "fe80::2", "[fe80::1%test0]:0"},
-		{"missing family", []string{"192.0.2.1/24"}, "2001:db8::2", ""},
-		{"missing scope", []string{"fe80::1/64"}, "2001:db8::2", ""},
-		{"no addresses", nil, "192.0.2.2", ""},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			var addrs []net.Addr
-			for _, cidr := range tc.addrs {
-				ip, subnet, err := net.ParseCIDR(cidr)
-				if err != nil {
-					t.Fatal(err)
-				}
-				subnet.IP = ip
-				addrs = append(addrs, subnet)
-			}
-			got, err := interfaceAddress("test0", addrs, net.ParseIP(tc.remote))
-			if tc.want == "" {
-				if err == nil {
-					t.Fatal("expected an error for an interface without a suitable address")
-				}
-				return
-			}
-			if err != nil || got.String() != tc.want {
-				t.Fatalf("source = %v, error = %v; want %s", got, err, tc.want)
-			}
-		})
 	}
 }

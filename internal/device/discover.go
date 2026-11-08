@@ -54,7 +54,7 @@ func discoverRound(ctx context.Context, conf *config.Config, ch chan<- castdns.C
 	ctx, cancel := context.WithTimeout(ctx, conf.DiscoverInterval)
 	defer cancel()
 
-	entries, err := castdns.DiscoverCastDNSEntries(ctx, conf.NetworkInterface)
+	entries, err := castdns.DiscoverCastDNSEntries(ctx, nil)
 	if err != nil {
 		return err
 	}

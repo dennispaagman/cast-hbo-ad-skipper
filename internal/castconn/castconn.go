@@ -13,7 +13,6 @@ import (
 	"net"
 	"sync"
 	"sync/atomic"
-	"syscall"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -52,39 +51,9 @@ type Conn struct {
 
 // Dial connects to a Cast device. timeout bounds the dial and every read and write; the
 // connection sends keepalive PINGs often enough that an idle but healthy device never hits it.
-// A non-nil iface binds both the source address and the outgoing network interface.
-func Dial(ctx context.Context, addr string, timeout time.Duration, iface *net.Interface) (*Conn, error) {
-	netDialer := &net.Dialer{Timeout: timeout}
-	if iface != nil {
-		remote, err := net.ResolveTCPAddr("tcp", addr)
-		if err != nil {
-			return nil, err
-		}
-		addrs, err := iface.Addrs()
-		if err != nil {
-			return nil, fmt.Errorf("interface %s: %w", iface.Name, err)
-		}
-		local, err := interfaceAddress(iface.Name, addrs, remote.IP)
-		if err != nil {
-			return nil, err
-		}
-		netDialer.LocalAddr = local
-		netDialer.Control = func(network, _ string, raw syscall.RawConn) error {
-			var bindErr error
-			if err := raw.Control(func(fd uintptr) {
-				bindErr = bindInterface(fd, network, iface)
-			}); err != nil {
-				return err
-			}
-			return bindErr
-		}
-		if remote.IP.IsLinkLocalUnicast() && remote.Zone == "" {
-			remote.Zone = iface.Name
-		}
-		addr = remote.String()
-	}
+func Dial(ctx context.Context, addr string, timeout time.Duration) (*Conn, error) {
 	dialer := tls.Dialer{
-		NetDialer: netDialer,
+		NetDialer: &net.Dialer{Timeout: timeout},
 		Config:    &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // Cast devices use self-signed certificates.
 	}
 	nc, err := dialer.DialContext(ctx, "tcp", addr)
@@ -100,32 +69,6 @@ func Dial(ctx context.Context, addr string, timeout time.Duration, iface *net.In
 	go c.readLoop()
 	go c.keepalive()
 	return c, nil
-}
-
-// interfaceAddress selects a source in the destination's address family and scope,
-// preferring an address on the destination's subnet when the interface has several.
-func interfaceAddress(name string, addrs []net.Addr, remote net.IP) (*net.TCPAddr, error) {
-	var fallback *net.TCPAddr
-	for _, addr := range addrs {
-		ip, subnet, err := net.ParseCIDR(addr.String())
-		if err != nil || ip.IsUnspecified() || (ip.To4() != nil) != (remote.To4() != nil) || ip.IsLinkLocalUnicast() != remote.IsLinkLocalUnicast() {
-			continue
-		}
-		local := &net.TCPAddr{IP: ip}
-		if ip.IsLinkLocalUnicast() {
-			local.Zone = name
-		}
-		if subnet.Contains(remote) {
-			return local, nil
-		}
-		if fallback == nil {
-			fallback = local
-		}
-	}
-	if fallback == nil {
-		return nil, fmt.Errorf("interface %s has no source address for %s", name, remote)
-	}
-	return fallback, nil
 }
 
 func (c *Conn) Messages() <-chan Message { return c.messages }

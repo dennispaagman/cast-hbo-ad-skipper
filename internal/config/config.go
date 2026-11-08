@@ -17,8 +17,7 @@ import (
 const envPrefix = "HBO_AD_SKIPPER_"
 
 type Config struct {
-	Devices          []castdns.CastEntry
-	NetworkInterface *net.Interface
+	Devices []castdns.CastEntry
 
 	DiscoverInterval time.Duration
 	PollInterval     time.Duration
@@ -40,7 +39,6 @@ func Load(args []string) (*Config, error) {
 	}
 
 	devices := fs.String("devices", env("devices", ""), "Comma-separated device addresses (host or host:port). Disables mDNS discovery.")
-	iface := fs.String("network-interface", env("network-interface", ""), "Network interface to use for discovery and connections")
 	discoverInterval := fs.Duration("discover-interval", envDuration("discover-interval", 5*time.Minute), "Interval to restart device discovery")
 	pollInterval := fs.Duration("poll-interval", envDuration("poll-interval", 2*time.Second), "Media status poll interval while HBO Max is casting; a fallback, as the device pushes ad starts")
 	requestTimeout := fs.Duration("request-timeout", envDuration("request-timeout", 10*time.Second), "Timeout for connecting, writes and silence on the connection before reconnecting")
@@ -64,14 +62,6 @@ func Load(args []string) (*Config, error) {
 
 	if err := c.LogLevel.UnmarshalText([]byte(*logLevel)); err != nil {
 		return nil, fmt.Errorf("invalid log level %q: %w", *logLevel, err)
-	}
-
-	if *iface != "" {
-		i, err := net.InterfaceByName(*iface)
-		if err != nil {
-			return nil, fmt.Errorf("network interface %q: %w", *iface, err)
-		}
-		c.NetworkInterface = i
 	}
 
 	if *devices != "" {

@@ -49,7 +49,6 @@ Every flag can also be set as an environment variable: add the `HBO_AD_SKIPPER_`
 | Flag | Default | Description |
 |---|---|---|
 | `-devices` | (empty) | Comma-separated device addresses (`host` or `host:port`). Disables mDNS discovery. |
-| `-network-interface` | (empty) | Network interface to use for discovery and connections. |
 | `-restart-cooldown` | `30s` | Minimum time between two restarts on the same device. |
 | `-live-only` | `true` | Only restart live streams. |
 | `-dry-run` | `false` | Log detected ads without restarting the stream. |
