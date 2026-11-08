@@ -152,11 +152,11 @@ func (c *Conn) Send(destinationID, namespace string, payload map[string]any) err
 	}
 	data, err := proto.Marshal(&pb.CastMessage{
 		ProtocolVersion: pb.CastMessage_CASTV2_1_0.Enum(),
-		SourceId:        proto.String(SenderID),
-		DestinationId:   proto.String(destinationID),
-		Namespace:       proto.String(namespace),
+		SourceId:        new(SenderID),
+		DestinationId:   new(destinationID),
+		Namespace:       new(namespace),
 		PayloadType:     pb.CastMessage_STRING.Enum(),
-		PayloadUtf8:     proto.String(string(body)),
+		PayloadUtf8:     new(string(body)),
 	})
 	if err != nil {
 		return err

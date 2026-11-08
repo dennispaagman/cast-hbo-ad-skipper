@@ -9,7 +9,9 @@ linters:
     - bodyclose
     - errorlint
     - gocritic
+    - gosec
     - misspell
+    - modernize
     - nolintlint
     - perfsprint
     - revive

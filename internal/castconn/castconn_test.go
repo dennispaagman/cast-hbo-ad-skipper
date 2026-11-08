@@ -45,11 +45,11 @@ func writeFrame(t *testing.T, w io.Writer, namespace, payload string) {
 	t.Helper()
 	data, err := proto.Marshal(&pb.CastMessage{
 		ProtocolVersion: pb.CastMessage_CASTV2_1_0.Enum(),
-		SourceId:        proto.String(ReceiverID),
-		DestinationId:   proto.String(SenderID),
-		Namespace:       proto.String(namespace),
+		SourceId:        new(ReceiverID),
+		DestinationId:   new(SenderID),
+		Namespace:       new(namespace),
 		PayloadType:     pb.CastMessage_STRING.Enum(),
-		PayloadUtf8:     proto.String(payload),
+		PayloadUtf8:     new(payload),
 	})
 	if err != nil {
 		t.Fatal(err)

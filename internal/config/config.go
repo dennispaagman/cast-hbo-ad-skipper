@@ -85,7 +85,7 @@ func Load(args []string) (*Config, error) {
 	}
 
 	if *devices != "" {
-		for _, addr := range strings.Split(*devices, ",") {
+		for addr := range strings.SplitSeq(*devices, ",") {
 			addr = strings.TrimSpace(addr)
 			if addr == "" {
 				continue
