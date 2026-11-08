@@ -1,0 +1,23 @@
+[tools]
+go = "1.27.3"
+golangci-lint = "2.14.0"
+
+[tasks.fmt]
+description = "Format code"
+run = "golangci-lint fmt ./..."
+
+[tasks.lint]
+description = "Lint code"
+run = "golangci-lint run ./..."
+
+[tasks.test]
+description = "Run tests"
+run = "go test -race ./..."
+
+[tasks.build]
+description = "Build the service and the debug probe"
+run = ["go build -o bin/cast-hbo-ad-skipper .", "go build -o bin/castprobe ./cmd/castprobe"]
+
+[tasks.check]
+description = "Format check, lint and test"
+depends = ["lint", "test"]
