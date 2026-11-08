@@ -8,7 +8,7 @@ import (
 
 	castdns "github.com/vishen/go-chromecast/dns"
 
-	"github.com/dennis/cast-hbo-ad-skipper/internal/config"
+	"github.com/dennispaagman/cast-hbo-ad-skipper/internal/config"
 )
 
 // Discover emits cast devices until ctx is cancelled. Devices are re-emitted on every round so a

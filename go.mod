@@ -1,4 +1,4 @@
-module github.com/dennis/cast-hbo-ad-skipper
+module github.com/dennispaagman/cast-hbo-ad-skipper
 
 go 1.27.3
 

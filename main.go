@@ -13,9 +13,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/dennis/cast-hbo-ad-skipper/internal/config"
-	"github.com/dennis/cast-hbo-ad-skipper/internal/device"
-	"github.com/dennis/cast-hbo-ad-skipper/internal/health"
+	"github.com/dennispaagman/cast-hbo-ad-skipper/internal/config"
+	"github.com/dennispaagman/cast-hbo-ad-skipper/internal/device"
+	"github.com/dennispaagman/cast-hbo-ad-skipper/internal/health"
 )
 
 func main() {

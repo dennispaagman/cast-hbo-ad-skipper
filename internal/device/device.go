@@ -13,9 +13,9 @@ import (
 
 	castdns "github.com/vishen/go-chromecast/dns"
 
-	"github.com/dennis/cast-hbo-ad-skipper/internal/castconn"
-	"github.com/dennis/cast-hbo-ad-skipper/internal/config"
-	"github.com/dennis/cast-hbo-ad-skipper/internal/health"
+	"github.com/dennispaagman/cast-hbo-ad-skipper/internal/castconn"
+	"github.com/dennispaagman/cast-hbo-ad-skipper/internal/config"
+	"github.com/dennispaagman/cast-hbo-ad-skipper/internal/health"
 )
 
 var (

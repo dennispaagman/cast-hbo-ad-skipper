@@ -11,7 +11,7 @@ import (
 
 	castdns "github.com/vishen/go-chromecast/dns"
 
-	"github.com/dennis/cast-hbo-ad-skipper/internal/config"
+	"github.com/dennispaagman/cast-hbo-ad-skipper/internal/config"
 )
 
 type loadCall struct {
