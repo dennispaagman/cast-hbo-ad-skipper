@@ -17,6 +17,12 @@ import (
 	"github.com/dennispaagman/cast-hbo-ad-skipper/internal/config"
 )
 
+const (
+	pollInterval    = 2 * time.Second
+	requestTimeout  = 10 * time.Second
+	restartCooldown = 30 * time.Second
+)
+
 var (
 	active           sync.Map
 	reconnectBackoff = []time.Duration{2 * time.Second, 5 * time.Second, 10 * time.Second, 30 * time.Second, time.Minute}
@@ -94,7 +100,7 @@ func deviceAddress(entry castdns.CastEntry) string {
 }
 
 func (d *Device) session(ctx context.Context) error {
-	conn, err := castconn.Dial(ctx, deviceAddress(d.entry), d.conf.RequestTimeout)
+	conn, err := castconn.Dial(ctx, deviceAddress(d.entry), requestTimeout)
 	if err != nil {
 		return fmt.Errorf("connect: %w", err)
 	}
@@ -115,7 +121,7 @@ func (d *Device) session(ctx context.Context) error {
 
 	// Ad starts are pushed by the receiver; polling only covers a missed push. The connection
 	// itself is kept alive and checked by castconn's keepalive and read deadline.
-	poll := time.NewTicker(d.conf.PollInterval)
+	poll := time.NewTicker(pollInterval)
 	defer poll.Stop()
 	for {
 		select {
@@ -237,14 +243,14 @@ func (d *Device) handleMedia(st mediaStatus) {
 		}
 		return
 	}
-	if d.conf.LiveOnly && d.media.StreamType != "LIVE" {
+	if d.media.StreamType != "LIVE" {
 		if d.warnedNonLive != d.media.ContentID {
 			d.logger.Info("Ignoring ad on a non-live stream.", "stream_type", d.media.StreamType)
 			d.warnedNonLive = d.media.ContentID
 		}
 		return
 	}
-	if !d.lastRestart.IsZero() && d.now().Sub(d.lastRestart) < d.conf.RestartCooldown {
+	if !d.lastRestart.IsZero() && d.now().Sub(d.lastRestart) < restartCooldown {
 		d.logger.Debug("Ad detected during restart cooldown.", "since_restart", d.now().Sub(d.lastRestart))
 		return
 	}

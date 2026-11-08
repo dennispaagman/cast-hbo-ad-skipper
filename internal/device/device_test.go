@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -22,7 +21,7 @@ type loadCall struct {
 func newTestDevice(t *testing.T, conf *config.Config) (*Device, *[]loadCall, *time.Time) {
 	t.Helper()
 	if conf == nil {
-		conf = &config.Config{LiveOnly: true, RestartCooldown: 30 * time.Second}
+		conf = &config.Config{}
 	}
 	now := time.Date(2026, 11, 8, 15, 41, 0, 0, time.UTC)
 	var calls []loadCall
@@ -97,17 +96,11 @@ func TestRestartCooldown(t *testing.T) {
 	}
 }
 
-func TestIgnoresNonLiveWhenLiveOnly(t *testing.T) {
+func TestIgnoresNonLive(t *testing.T) {
 	d, calls, _ := newTestDevice(t, nil)
 	d.handleMedia(mustMedia(t, strings.Replace(fullStatusInAd, `"streamType":"LIVE"`, `"streamType":"BUFFERED"`, 1)))
 	if len(*calls) != 0 {
 		t.Fatalf("restarted a non-live stream")
-	}
-
-	d, calls, _ = newTestDevice(t, &config.Config{LiveOnly: false, RestartCooldown: time.Second})
-	d.handleMedia(mustMedia(t, strings.Replace(fullStatusInAd, `"streamType":"LIVE"`, `"streamType":"BUFFERED"`, 1)))
-	if len(*calls) != 1 {
-		t.Fatalf("expected restart with live-only disabled")
 	}
 }
 
@@ -121,7 +114,7 @@ func TestIgnoresOtherApps(t *testing.T) {
 }
 
 func TestDryRun(t *testing.T) {
-	d, calls, _ := newTestDevice(t, &config.Config{LiveOnly: true, DryRun: true, RestartCooldown: time.Second})
+	d, calls, _ := newTestDevice(t, &config.Config{DryRun: true})
 	d.handleMedia(mustMedia(t, fullStatusInAd))
 	if len(*calls) != 0 {
 		t.Fatalf("dry run sent a LOAD")
@@ -139,30 +132,20 @@ func TestAppChangeClearsMedia(t *testing.T) {
 }
 
 func TestMediaSessionChangeClearsMedia(t *testing.T) {
-	for _, liveOnly := range []bool{true, false} {
-		t.Run(strconv.FormatBool(liveOnly), func(t *testing.T) {
-			d, calls, _ := newTestDevice(t, &config.Config{LiveOnly: liveOnly})
-			d.handleMedia(mustMedia(t, fullStatusNoAd))
-			partial := mustMedia(t, partialStatusInAd)
-			partial.MediaSessionID++
-			d.handleMedia(partial)
-			if len(*calls) != 0 || d.media.Media != nil {
-				t.Fatal("retained media from the previous media session")
-			}
+	d, calls, _ := newTestDevice(t, nil)
+	d.handleMedia(mustMedia(t, fullStatusNoAd))
+	partial := mustMedia(t, partialStatusInAd)
+	partial.MediaSessionID++
+	d.handleMedia(partial)
+	if len(*calls) != 0 || d.media.Media != nil {
+		t.Fatal("retained media from the previous media session")
+	}
 
-			payload := strings.ReplaceAll(fullStatusInAd, "program-1", "program-2")
-			payload = strings.ReplaceAll(payload, `"streamType":"LIVE"`, `"streamType":"BUFFERED"`)
-			full := mustMedia(t, payload)
-			full.MediaSessionID = partial.MediaSessionID
-			d.handleMedia(full)
-			if liveOnly {
-				if len(*calls) != 0 {
-					t.Fatal("restarted a non-live stream after a media session change")
-				}
-			} else if len(*calls) != 1 || !strings.Contains(string((*calls)[0].media), `"contentId":"program-2"`) {
-				t.Fatal("did not restart the new program when its details arrived")
-			}
-		})
+	full := mustMedia(t, strings.ReplaceAll(fullStatusInAd, "program-1", "program-2"))
+	full.MediaSessionID = partial.MediaSessionID
+	d.handleMedia(full)
+	if len(*calls) != 1 || !strings.Contains(string((*calls)[0].media), `"contentId":"program-2"`) {
+		t.Fatal("did not restart the new program when its details arrived")
 	}
 }
 

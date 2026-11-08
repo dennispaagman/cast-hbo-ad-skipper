@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -9,7 +8,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	castdns "github.com/vishen/go-chromecast/dns"
 )
@@ -17,15 +15,8 @@ import (
 const envPrefix = "HBO_AD_SKIPPER_"
 
 type Config struct {
-	Devices []castdns.CastEntry
-
-	DiscoverInterval time.Duration
-	PollInterval     time.Duration
-	RequestTimeout   time.Duration
-	RestartCooldown  time.Duration
-	LiveOnly         bool
-	DryRun           bool
-
+	Devices  []castdns.CastEntry
+	DryRun   bool
 	LogLevel slog.Level
 }
 
@@ -34,16 +25,11 @@ func Load(args []string) (*Config, error) {
 	fs.Usage = func() {
 		fmt.Fprintf(fs.Output(), "Usage: cast-hbo-ad-skipper [flags]\n\n"+
 			"Restarts HBO Max live streams on Chromecast devices when an ad break starts.\n"+
-			"Every flag can also be set with an environment variable, e.g. -restart-cooldown -> %sRESTART_COOLDOWN.\n\n", envPrefix)
+			"Every flag can also be set with an environment variable, e.g. -dry-run -> %sDRY_RUN.\n\n", envPrefix)
 		fs.PrintDefaults()
 	}
 
 	devices := fs.String("devices", env("devices", ""), "Comma-separated device addresses (host or host:port). Disables mDNS discovery.")
-	discoverInterval := fs.Duration("discover-interval", envDuration("discover-interval", 5*time.Minute), "Interval to restart device discovery")
-	pollInterval := fs.Duration("poll-interval", envDuration("poll-interval", 2*time.Second), "Media status poll interval while HBO Max is casting; a fallback, as the device pushes ad starts")
-	requestTimeout := fs.Duration("request-timeout", envDuration("request-timeout", 10*time.Second), "Timeout for connecting, writes and silence on the connection before reconnecting")
-	restartCooldown := fs.Duration("restart-cooldown", envDuration("restart-cooldown", 30*time.Second), "Minimum time between two restarts on the same device")
-	liveOnly := fs.Bool("live-only", envBool("live-only", true), "Only restart live streams (restarting on-demand content would lose the playback position)")
 	dryRun := fs.Bool("dry-run", envBool("dry-run", false), "Log detected ads without restarting the stream")
 	logLevel := fs.String("log-level", env("log-level", "info"), "Log level (debug, info, warn, error)")
 
@@ -51,14 +37,7 @@ func Load(args []string) (*Config, error) {
 		return nil, err
 	}
 
-	c := &Config{
-		DiscoverInterval: *discoverInterval,
-		PollInterval:     *pollInterval,
-		RequestTimeout:   *requestTimeout,
-		RestartCooldown:  *restartCooldown,
-		LiveOnly:         *liveOnly,
-		DryRun:           *dryRun,
-	}
+	c := &Config{DryRun: *dryRun}
 
 	if err := c.LogLevel.UnmarshalText([]byte(*logLevel)); err != nil {
 		return nil, fmt.Errorf("invalid log level %q: %w", *logLevel, err)
@@ -79,10 +58,6 @@ func Load(args []string) (*Config, error) {
 		if len(c.Devices) == 0 {
 			return nil, fmt.Errorf("-devices %q contains no device addresses", *devices)
 		}
-	}
-
-	if c.PollInterval <= 0 || c.RequestTimeout <= 0 || c.DiscoverInterval <= 0 {
-		return nil, errors.New("intervals and timeouts must be positive")
 	}
 
 	return c, nil
@@ -122,10 +97,6 @@ func env(name, def string) string {
 		return v
 	}
 	return def
-}
-
-func envDuration(name string, def time.Duration) time.Duration {
-	return envParse(name, def, time.ParseDuration)
 }
 
 func envBool(name string, def bool) bool {

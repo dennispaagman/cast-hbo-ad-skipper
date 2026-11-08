@@ -29,7 +29,7 @@ func run() int {
 	}
 
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: conf.LogLevel})))
-	slog.Info("Starting cast-hbo-ad-skipper.", "dry_run", conf.DryRun, "live_only", conf.LiveOnly, "restart_cooldown", conf.RestartCooldown)
+	slog.Info("Starting cast-hbo-ad-skipper.", "dry_run", conf.DryRun)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()

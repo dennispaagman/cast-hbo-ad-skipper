@@ -14,9 +14,9 @@ The service connects to each Chromecast over the Cast protocol (port 8009), the 
 Guard rails:
 
 - Only HBO Max sessions are touched (app ID `3A2AA214`).
-- By default only `LIVE` streams are restarted. Restarting on-demand content would lose your position; use `-live-only=false` to change this.
+- Only `LIVE` streams are restarted. Restarting on-demand content would lose your position.
 - Paused streams are left alone.
-- After a restart, there is a cooldown (default 30 s) before the service will restart again. This prevents restart loops if the new session also opens with an ad.
+- After a restart, there is a 30 s cooldown before the service will restart again. This prevents restart loops if the new session also opens with an ad.
 
 ## Running with Docker Compose
 
@@ -44,17 +44,12 @@ Start with `-dry-run` to see which ads would be skipped, without restarting anyt
 
 ## Configuration
 
-Every flag can also be set as an environment variable: add the `HBO_AD_SKIPPER_` prefix, use upper case, and replace dashes with underscores (for example `-restart-cooldown` becomes `HBO_AD_SKIPPER_RESTART_COOLDOWN`).
+Every flag can also be set as an environment variable: add the `HBO_AD_SKIPPER_` prefix, use upper case, and replace dashes with underscores (for example `-dry-run` becomes `HBO_AD_SKIPPER_DRY_RUN`).
 
 | Flag | Default | Description |
 |---|---|---|
 | `-devices` | (empty) | Comma-separated device addresses (`host` or `host:port`). Disables mDNS discovery. |
-| `-restart-cooldown` | `30s` | Minimum time between two restarts on the same device. |
-| `-live-only` | `true` | Only restart live streams. |
 | `-dry-run` | `false` | Log detected ads without restarting the stream. |
-| `-poll-interval` | `2s` | Media status poll interval while HBO Max is casting. This is a fallback, because the device pushes ad starts itself. |
-| `-request-timeout` | `10s` | Timeout for connecting and for writes. The service also reconnects when the device has been silent for this long (keepalive PINGs prevent that on a healthy connection). |
-| `-discover-interval` | `5m` | How long each mDNS discovery round lasts before it starts over. |
 | `-log-level` | `info` | `debug`, `info`, `warn` or `error`. |
 
 Example log output when an ad is skipped:

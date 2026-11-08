@@ -11,6 +11,9 @@ import (
 	"github.com/dennispaagman/cast-hbo-ad-skipper/internal/config"
 )
 
+// Each mDNS discovery round lasts this long before it starts over.
+const discoverInterval = 5 * time.Minute
+
 // Discover emits cast devices until ctx is cancelled. Devices are re-emitted on every round so a
 // device whose watcher exited (e.g. after a network outage) gets picked up again.
 func Discover(ctx context.Context, conf *config.Config) <-chan castdns.CastEntry {
@@ -27,7 +30,7 @@ func Discover(ctx context.Context, conf *config.Config) <-chan castdns.CastEntry
 
 		slog.Info("Searching for devices...")
 		for ctx.Err() == nil {
-			if err := discoverRound(ctx, conf, ch); err != nil {
+			if err := discoverRound(ctx, ch); err != nil {
 				slog.Error("Device discovery failed.", "error", err)
 				sleepCtx(ctx, 10*time.Second)
 			}
@@ -50,8 +53,8 @@ func emitStatic(ctx context.Context, devices []castdns.CastEntry, ch chan<- cast
 	}
 }
 
-func discoverRound(ctx context.Context, conf *config.Config, ch chan<- castdns.CastEntry) error {
-	ctx, cancel := context.WithTimeout(ctx, conf.DiscoverInterval)
+func discoverRound(ctx context.Context, ch chan<- castdns.CastEntry) error {
+	ctx, cancel := context.WithTimeout(ctx, discoverInterval)
 	defer cancel()
 
 	entries, err := castdns.DiscoverCastDNSEntries(ctx, nil)
