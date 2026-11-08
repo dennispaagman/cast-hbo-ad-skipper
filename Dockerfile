@@ -17,7 +17,4 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=build /out/cast-hbo-ad-skipper /cast-hbo-ad-skipper
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD ["/cast-hbo-ad-skipper", "-healthcheck"]
-
 ENTRYPOINT ["/cast-hbo-ad-skipper"]

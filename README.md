@@ -32,13 +32,6 @@ environment:
   HBO_AD_SKIPPER_DEVICES: 192.168.1.79
 ```
 
-### Health checks and restarts
-
-- The image has a `HEALTHCHECK` that runs `/cast-hbo-ad-skipper -healthcheck`. That queries `GET /healthz` on `127.0.0.1:8932`.
-- Each device watcher records a heartbeat on every poll tick while its connection is alive. The endpoint returns `503` when a watcher has stopped reporting for longer than allowed (about 2 minutes with the defaults).
-- Plain Docker doesn't restart a container just because its health check fails. To cover that, the service also exits when it detects a stuck watcher, and `restart: unless-stopped` then brings it back.
-- As an extra safety net, you can enable the commented-out [autoheal](https://github.com/willfarrell/docker-autoheal) sidecar in `compose.yaml`. It needs access to the Docker socket.
-
 ## Running without Docker
 
 ```sh
@@ -63,7 +56,6 @@ Every flag can also be set as an environment variable: add the `HBO_AD_SKIPPER_`
 | `-poll-interval` | `2s` | Media status poll interval while HBO Max is casting. This is a fallback, because the device pushes ad starts itself. |
 | `-request-timeout` | `10s` | Timeout for connecting and for writes. The service also reconnects when the device has been silent for this long (keepalive PINGs prevent that on a healthy connection). |
 | `-discover-interval` | `5m` | How long each mDNS discovery round lasts before it starts over. |
-| `-health-addr` | `127.0.0.1:8932` | Address of the `/healthz` endpoint. Leave it empty to disable the endpoint. |
 | `-log-level` | `info` | `debug`, `info`, `warn` or `error`. |
 
 Example log output when an ad is skipped:

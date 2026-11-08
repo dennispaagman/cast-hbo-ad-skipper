@@ -32,13 +32,3 @@ func TestLoadRejectsEmptyDeviceList(t *testing.T) {
 		t.Fatal("expected error for a device without host")
 	}
 }
-
-func TestHealthCheckSkipsDeviceResolution(t *testing.T) {
-	c, err := Load([]string{"-healthcheck", "-devices", "does-not-resolve.invalid", "-network-interface", "does-not-exist0"})
-	if err != nil {
-		t.Fatalf("healthcheck mode should not resolve devices or interfaces: %v", err)
-	}
-	if !c.HealthCheck {
-		t.Fatal("HealthCheck not set")
-	}
-}

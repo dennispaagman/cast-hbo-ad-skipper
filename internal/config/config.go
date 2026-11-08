@@ -26,8 +26,6 @@ type Config struct {
 	RestartCooldown  time.Duration
 	LiveOnly         bool
 	DryRun           bool
-	HealthAddr       string
-	HealthCheck      bool
 
 	LogLevel slog.Level
 }
@@ -49,8 +47,6 @@ func Load(args []string) (*Config, error) {
 	restartCooldown := fs.Duration("restart-cooldown", envDuration("restart-cooldown", 30*time.Second), "Minimum time between two restarts on the same device")
 	liveOnly := fs.Bool("live-only", envBool("live-only", true), "Only restart live streams (restarting on-demand content would lose the playback position)")
 	dryRun := fs.Bool("dry-run", envBool("dry-run", false), "Log detected ads without restarting the stream")
-	healthAddr := fs.String("health-addr", env("health-addr", "127.0.0.1:8932"), "Address for the /healthz endpoint (empty disables it)")
-	healthCheck := fs.Bool("healthcheck", false, "Query the health endpoint at -health-addr and exit non-zero when unhealthy")
 	logLevel := fs.String("log-level", env("log-level", "info"), "Log level (debug, info, warn, error)")
 
 	if err := fs.Parse(args); err != nil {
@@ -64,12 +60,6 @@ func Load(args []string) (*Config, error) {
 		RestartCooldown:  *restartCooldown,
 		LiveOnly:         *liveOnly,
 		DryRun:           *dryRun,
-		HealthAddr:       *healthAddr,
-		HealthCheck:      *healthCheck,
-	}
-
-	if c.HealthCheck {
-		return c, nil
 	}
 
 	if err := c.LogLevel.UnmarshalText([]byte(*logLevel)); err != nil {

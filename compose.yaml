@@ -12,23 +12,3 @@ services:
       # HBO_AD_SKIPPER_DEVICES: 192.168.1.79
       # HBO_AD_SKIPPER_LOG_LEVEL: debug
       # HBO_AD_SKIPPER_DRY_RUN: "true"
-      # HBO_AD_SKIPPER_HEALTH_ADDR: 127.0.0.1:8932
-    healthcheck:
-      test: ["CMD", "/cast-hbo-ad-skipper", "-healthcheck"]
-      interval: 30s
-      timeout: 10s
-      start_period: 30s
-      retries: 3
-    labels:
-      autoheal: "true"
-
-  # Optional: restarts the service whenever Docker marks it unhealthy. The service already exits on
-  # its own when it gets stuck, so this is only a second safety net. It needs the Docker socket,
-  # which gives it full control over Docker on this host.
-  # autoheal:
-  #   image: willfarrell/autoheal:1.2.0
-  #   restart: unless-stopped
-  #   environment:
-  #     AUTOHEAL_CONTAINER_LABEL: autoheal
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock

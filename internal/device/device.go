@@ -15,20 +15,12 @@ import (
 
 	"github.com/dennispaagman/cast-hbo-ad-skipper/internal/castconn"
 	"github.com/dennispaagman/cast-hbo-ad-skipper/internal/config"
-	"github.com/dennispaagman/cast-hbo-ad-skipper/internal/health"
 )
 
 var (
 	active           sync.Map
 	reconnectBackoff = []time.Duration{2 * time.Second, 5 * time.Second, 10 * time.Second, 30 * time.Second, time.Minute}
 )
-
-// HealthMaxAge is how long a watcher may go without a heartbeat before it counts as stuck: a
-// poll, a reconnect attempt (dial plus the CONNECT and GET_STATUS writes, each bounded by the
-// request timeout) and the longest reconnect backoff, plus slack.
-func HealthMaxAge(c *config.Config) time.Duration {
-	return c.PollInterval + 3*c.RequestTimeout + reconnectBackoff[len(reconnectBackoff)-1] + 30*time.Second
-}
 
 type Device struct {
 	conf   *config.Config
@@ -63,10 +55,7 @@ func Watch(ctx context.Context, conf *config.Config, entry castdns.CastEntry) {
 	if _, loaded := active.LoadOrStore(key, struct{}{}); loaded {
 		return
 	}
-	defer func() {
-		health.Remove(key)
-		active.Delete(key)
-	}()
+	defer active.Delete(key)
 
 	name := entry.DeviceName
 	if name == "" {
@@ -79,7 +68,6 @@ func Watch(ctx context.Context, conf *config.Config, entry castdns.CastEntry) {
 func (d *Device) Run(ctx context.Context) {
 	failures := 0
 	for {
-		health.Beat(d.key)
 		started := d.now()
 		err := d.session(ctx)
 		if ctx.Err() != nil {
@@ -140,7 +128,6 @@ func (d *Device) session(ctx context.Context) error {
 				return err
 			}
 		case <-poll.C:
-			health.Beat(d.key)
 			if d.receiver.isHBOMax() {
 				if err := conn.Send(d.receiver.TransportID, castconn.NamespaceMedia, map[string]any{"type": "GET_STATUS"}); err != nil {
 					return err
