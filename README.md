@@ -21,9 +21,11 @@ Guard rails:
 ## Running with Docker Compose
 
 ```sh
-docker compose up -d --build
+docker compose up -d
 docker compose logs -f
 ```
+
+`docker-compose.yml` runs the image that CI publishes to `ghcr.io/dennispaagman/cast-hbo-ad-skipper` from `main`. Run `docker compose pull` to update it. To run a local build instead, swap `image:` for `build: .`.
 
 The compose file uses `network_mode: host`, because finding Chromecasts with mDNS needs multicast on your LAN. If you can't use host networking (for example Docker Desktop with host networking turned off), list your devices explicitly:
 
