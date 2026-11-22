@@ -91,3 +91,13 @@ GitHub Actions (`.github/workflows/ci.yml`) checks formatting, lints, runs the t
 
 - This relies on how the HBO Max Cast receiver currently behaves: the `breakStatus` signal, accepting a `LOAD` from a sender other than the phone, and a restart skipping the ad. Any of these can change without notice.
 - The service works with real Chromecast devices that cast HBO Max. It does not cover the native HBO Max app on Google TV or Android TV, because that app doesn't use the Cast protocol.
+
+## Disclaimer
+
+This is an unofficial project. It is not affiliated with, endorsed by or sponsored by HBO, HBO Max, their parent companies or Google. All trademarks belong to their respective owners.
+
+Skipping ads may violate the HBO Max terms of use. Use it at your own risk.
+
+## License
+
+[MIT](LICENSE)
