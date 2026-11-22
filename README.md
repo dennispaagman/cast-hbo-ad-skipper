@@ -2,7 +2,7 @@
 
 Skips the ad breaks in HBO Max live sports streams on Chromecast by restarting the stream the moment an ad starts.
 
-HBO Max stitches ads into live streams, and restarting a stream drops you back at the live edge without the ad. This service watches every Chromecast on your network and does that restart for you, usually within a second or two of the ad starting. Inspired by [CastSponsorSkip](https://github.com/gabe565/CastSponsorSkip).
+HBO Max stitches ads into live streams, and restarting a stream drops you back at the live edge without the ad. This service watches every Chromecast on your network and does that restart for you, usually within half a second of the ad starting. Inspired by [CastSponsorSkip](https://github.com/gabe565/CastSponsorSkip).
 
 ## How it works
 
