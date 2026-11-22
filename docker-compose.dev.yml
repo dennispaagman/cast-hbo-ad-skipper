@@ -1,0 +1,4 @@
+services:
+  cast-hbo-ad-skipper:
+    build: .
+    image: cast-hbo-ad-skipper:dev
